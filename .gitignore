@@ -1,0 +1,13 @@
+/out
+bin/
+build/
+cmake-build-debug/
+.vs
+.vscode
+.idea
+CMakeSettings.json
+*.exe
+*.ilk
+*.obj
+*.pdb
+Debug
