@@ -4,16 +4,22 @@
 #endif //TINY_INTERPRETER_H
 
 #include <iostream>
+#include <variant>
 #include <string>
+#include <map>
+#include <vector>
+#include <algorithm>
 
-enum TokenType
+#pragma region Token
+enum class TokenType
 {
+    NOT_A_KEYWORD = -3,
     EOF_ = -1, // put underscore at the end cause EOF is reserved
     NEWLINE = 0,
     NUMBER = 1,
     IDENT = 2,
     STRING = 3,
-    // Keywords.
+    // Keywords. Also add them in Lexer.cpp Lexer::checkIfKeyword method in keywords array
     LABEL = 101,
     GOTO = 102,
     PRINT = 103,
@@ -37,9 +43,39 @@ enum TokenType
     LTEQ = 209,
     GT = 210,
     GTEQ = 211,
+};
 
-    // !!!INVALID
-    INVALID_,
+static std::map<std::string ,TokenType> mapTokenType = {
+    {"NOT_A_KEYWORD", TokenType::NOT_A_KEYWORD},
+    {"EOF_", TokenType::EOF_}, // put underscore at the end cause EOF is reserved
+    {"NEWLINE", TokenType::NEWLINE},
+    {"NUMBER", TokenType::NUMBER},
+    {"IDENT", TokenType::IDENT},
+    {"STRING", TokenType::STRING},
+    // Keywords. Also add them in Lexer.cpp Lexer::checkIfKeyword method in keywords array
+    {"LABEL", TokenType::LABEL},
+    {"GOTO", TokenType::GOTO},
+    {"PRINT", TokenType::PRINT},
+    {"INPUT", TokenType::INPUT},
+    {"LET", TokenType::LET},
+    {"IF", TokenType::IF},
+    {"THEN", TokenType::THEN},
+    {"ENDIF", TokenType::ENDIF},
+    {"WHILE", TokenType::WHILE},
+    {"REPEAT", TokenType::REPEAT},
+    {"ENDWHILE", TokenType::ENDWHILE},
+    // Operators.
+    {"EQ", TokenType::EQ},
+    {"PLUS", TokenType::PLUS},
+    {"MINUS", TokenType::MINUS},
+    {"ASTERISK", TokenType::ASTERISK},
+    {"SLASH", TokenType::SLASH},
+    {"EQEQ", TokenType::EQEQ},
+    {"NOTEQ", TokenType::NOTEQ},
+    {"LT", TokenType::LT},
+    {"LTEQ", TokenType::LTEQ},
+    {"GT", TokenType::GT},
+    {"GTEQ", TokenType::GTEQ},
 };
 
 // Move to another file later
@@ -47,17 +83,23 @@ class Token
 {
 public:
     // properties
-    char      text;
-    TokenType kind;
+    std::variant<char, std::string> text;
+    TokenType                       kind;
 
     // constructor
-    Token(const char tokenText, const TokenType tokenKind)
+    Token(const std::variant<char, std::string>& tokenText, const TokenType tokenKind)
     {
         this->text = tokenText;
         this->kind = tokenKind;
     }
-};
 
+    static std::string getTokenKeyFromValue(const TokenType& value);
+
+    static TokenType checkIfKeyword(const std::variant<char, std::string>& tokenText);
+};
+#pragma endregion
+
+#pragma region Lexer
 class Lexer
 {
 public:
@@ -69,7 +111,7 @@ public:
     // constructor
     explicit Lexer(const std::string& source)
     {
-        this->source  = source + std::to_string('/n');
+        this->source  = source;
         this->curChar = '\0';
         this->curPos  = -1;
         this->nextChar();
@@ -82,5 +124,11 @@ public:
 
     void skipWhitespace();
 
+    void skipComment();
+
+    template <typename Enumeration>
+    static auto getTokenValue(Enumeration value) -> typename std::underlying_type<Enumeration>::type;
+
     Token getToken();
 };
+#pragma endregion

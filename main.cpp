@@ -3,24 +3,27 @@
 
 int main()
 {
-    const std::string source = "+- */";
+    const std::string source = "*12";
     Lexer lexer(source);
+    std::cout << source.size() << '\n';
 
     Token token = lexer.getToken();
-    try
+
+    while (token.kind != TokenType::EOF_)
     {
-        while (token.kind != EOF_)
+        std::string key = Token::getTokenKeyFromValue(token.kind);
+        std::cout << key << '\n';
+        try
         {
-            std::cout << token.kind << '\n';
             token = lexer.getToken();
-            lexer.nextChar();
         }
-    }
-    catch (const std::runtime_error& e)
-    {
-        std::cerr << "Lexer error. " << e.what();
-        return EXIT_FAILURE;
+        catch (const std::runtime_error& e)
+        {
+            std::cerr << "Lexer error. " << e.what();
+            return EXIT_FAILURE;
+        }
+        lexer.nextChar();
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
