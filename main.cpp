@@ -1,9 +1,28 @@
-#include <iostream>
 #include "Lexer.h"
 
 int main()
 {
-    const std::string source = "LET abc==++*12";
+    std::cout << std::filesystem::current_path() << '\n';
+
+    std::ifstream inputFile(std::filesystem::current_path().string() + "./test.bas");
+
+    if (!inputFile.is_open()) {
+        std::cerr
+            << "Error opening the file! Place the .bas file in the same directory where your executable is located"
+            << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    std::string source;
+    std::string line;
+
+    while (std::getline(inputFile, line))
+    {
+        source += line + "\n";
+    }
+
+    inputFile.close();
+
     Lexer lexer(source);
 
     Token token = lexer.getToken();

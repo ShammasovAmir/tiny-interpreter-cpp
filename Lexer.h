@@ -10,6 +10,7 @@
 #pragma region Token
 enum class TokenType
 {
+    NULL_ = -7,
     NOT_A_KEYWORD = -3,
     EOF_ = -1, // put underscore at the end cause EOF is reserved
     NEWLINE = 0,
