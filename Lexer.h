@@ -1,14 +1,11 @@
-#ifndef TINY_INTERPRETER_H
-#define TINY_INTERPRETER_H
+//
+// Created by Amir on 17.01.2024.
+//
 
-#endif //TINY_INTERPRETER_H
+#ifndef LEXER_H
+#define LEXER_H
 
-#include <iostream>
-#include <variant>
-#include <string>
-#include <map>
-#include <vector>
-#include <algorithm>
+#include "common.h"
 
 #pragma region Token
 enum class TokenType
@@ -79,9 +76,8 @@ static std::map<std::string ,TokenType> mapTokenType = {
 };
 
 // Move to another file later
-class Token
+struct Token
 {
-public:
     // properties
     std::variant<char, std::string> text;
     TokenType                       kind;
@@ -100,9 +96,8 @@ public:
 #pragma endregion
 
 #pragma region Lexer
-class Lexer
+struct Lexer
 {
-public:
     // properties
     std::string source;
     char        curChar;
@@ -132,3 +127,5 @@ public:
     Token getToken();
 };
 #pragma endregion
+
+#endif //LEXER_H

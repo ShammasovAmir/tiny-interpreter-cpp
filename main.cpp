@@ -1,18 +1,18 @@
 #include <iostream>
-#include "Lexer.hpp"
+#include "Lexer.h"
 
 int main()
 {
-    const std::string source = "*12";
+    const std::string source = "LET abc==++*12";
     Lexer lexer(source);
-    std::cout << source.size() << '\n';
 
     Token token = lexer.getToken();
 
-    while (token.kind != TokenType::EOF_)
+    for (int i = 1; i < source.length(); ++i)
     {
         std::string key = Token::getTokenKeyFromValue(token.kind);
-        std::cout << key << '\n';
+        std::cout << "Key: " << key << '\n';
+
         try
         {
             token = lexer.getToken();
@@ -22,7 +22,8 @@ int main()
             std::cerr << "Lexer error. " << e.what();
             return EXIT_FAILURE;
         }
-        lexer.nextChar();
+
+        if (token.kind == TokenType::EOF_) break;
     }
 
     return EXIT_SUCCESS;

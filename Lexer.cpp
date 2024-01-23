@@ -1,4 +1,4 @@
-#include "Lexer.hpp"
+#include "Lexer.h"
 
 #pragma region Token
 std::string Token::getTokenKeyFromValue(const TokenType& value)
@@ -81,18 +81,28 @@ Token Lexer::getToken()
 
     switch (this->curChar)
     {
-    case '+': return Token(this->curChar, TokenType::PLUS);
-    case '-': return Token(this->curChar, TokenType::MINUS);
-    case '*': return Token(this->curChar, TokenType::ASTERISK);
-    case '/': return Token(this->curChar, TokenType::SLASH);
+    case '+':
+        this->nextChar();
+        return Token(this->curChar, TokenType::PLUS);
+    case '-':
+        this->nextChar();
+        return Token(this->curChar, TokenType::MINUS);
+    case '*':
+        this->nextChar();
+        return Token(this->curChar, TokenType::ASTERISK);
+    case '/':
+        this->nextChar();
+        return Token(this->curChar, TokenType::SLASH);
     case '=':
         {
             if (this->peek() == '=')
             {
                 const char lastChar = this->curChar;
                 this->nextChar();
+                this->nextChar();
                 return Token(std::to_string(lastChar + this->curChar), TokenType::EQEQ);
             }
+            this->nextChar();
             return Token(this->curChar, TokenType::EQ);
         }
     case '>':
@@ -101,8 +111,10 @@ Token Lexer::getToken()
             {
                 const char lastChar = this->curChar;
                 this->nextChar();
+                this->nextChar();
                 return Token(std::to_string(lastChar + this->curChar), TokenType::GTEQ);
             }
+            this->nextChar();
             return Token(this->curChar, TokenType::GT);
         }
     case '<':
@@ -111,8 +123,10 @@ Token Lexer::getToken()
             {
                 const char lastChar = this->curChar;
                 this->nextChar();
+                this->nextChar();
                 return Token(std::to_string(lastChar + this->curChar), TokenType::LTEQ);
             }
+            this->nextChar();
             return Token(this->curChar, TokenType::LT);
         }
     case '!':
@@ -121,12 +135,15 @@ Token Lexer::getToken()
             {
                 const char lastChar = this->curChar;
                 this->nextChar();
+                this->nextChar();
                 return Token(std::to_string(lastChar + this->curChar), TokenType::NOTEQ);
             }
             throw std::runtime_error("Expected !=, got !" + std::to_string(this->peek()));
         }
-    case '\n': return Token(this->curChar, TokenType::NEWLINE);
-    case '\0': return Token(this->curChar, TokenType::EOF_);
+    case '\n': this->nextChar();
+return Token(this->curChar, TokenType::NEWLINE);
+    case '\0': this->nextChar();
+return Token(this->curChar, TokenType::EOF_);
     case '\"':
         {
             // Get the chars between quotations
@@ -146,6 +163,7 @@ Token Lexer::getToken()
 
             // Get the substring.
             std::string tokText = this->source.substr(startPos, this->curPos - startPos);
+            this->nextChar();
             return Token(tokText, TokenType::STRING);
         }
     default:
@@ -167,6 +185,7 @@ Token Lexer::getToken()
                 }
 
                 std::string tokText = this->source.substr(startPos, this->curPos - startPos + 1);
+                this->nextChar();
                 return Token(tokText, TokenType::NUMBER);
             }
             if (std::isalpha(this->curChar))
@@ -182,8 +201,10 @@ Token Lexer::getToken()
 
                 if (keyword == TokenType::NOT_A_KEYWORD)
                 {
+                    this->nextChar();
                     return Token(tokText, TokenType::IDENT);
                 }
+                this->nextChar();
                 return Token(tokText, keyword);
             }
 
