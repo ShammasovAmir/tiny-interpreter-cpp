@@ -1,12 +1,14 @@
 #include "Lexer.h"
+#include "Parser.h"
 
 int main()
 {
-    std::cout << std::filesystem::current_path() << '\n';
+    std::cout << "Tiny Basic Compiler" << '\n';
 
     std::ifstream inputFile(std::filesystem::current_path().string() + "./test.bas");
 
-    if (!inputFile.is_open()) {
+    if (!inputFile.is_open())
+    {
         std::cerr
             << "Error opening the file! Place the .bas file in the same directory where your executable is located"
             << std::endl;
@@ -23,27 +25,20 @@ int main()
 
     inputFile.close();
 
-    Lexer lexer(source);
-
-    Token token = lexer.getToken();
-
-    for (int i = 1; i < source.length(); ++i)
+    try
     {
-        std::string key = Token::getTokenKeyFromValue(token.kind);
-        std::cout << "Key: " << key << '\n';
+        Lexer lexer(source);
+        Parser parser(lexer);
 
-        try
-        {
-            token = lexer.getToken();
-        }
-        catch (const std::runtime_error& e)
-        {
-            std::cerr << "Lexer error. " << e.what();
-            return EXIT_FAILURE;
-        }
-
-        if (token.kind == TokenType::EOF_) break;
+        parser.program();
     }
+    catch (const std::runtime_error& e)
+    {
+        std::cerr << "Lexer error. " << e.what() << '\n';
+        return EXIT_FAILURE;
+    }
+
+    std::cout << "Parsing completed" << '\n';
 
     return EXIT_SUCCESS;
 }

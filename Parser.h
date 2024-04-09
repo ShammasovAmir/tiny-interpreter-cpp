@@ -11,9 +11,12 @@
 struct Parser
 {
     // properties
-    Lexer&    lexer;
-    Token currentToken;
-    Token peekToken;
+    Lexer&                lexer;
+    Token                 currentToken;
+    Token                 peekToken;
+    std::set<std::string> symbols; // Variables declared so far.
+    std::set<std::string> labelsDeclared; // Labels declared so far.
+    std::set<std::string> labelsGotoed; // Labels goto'ed so far.
 
     // constructor
     explicit Parser(Lexer& lexerInstance)
@@ -48,6 +51,24 @@ struct Parser
     // Newline
     // nl ::= '\n'+
     void newline();
+
+    // comparison ::= expression (("==" | "!=" | ">" | ">=" | "<" | "<=") expression)+
+    void comparison();
+
+    //  Return true if the current token is a comparison operator.
+    bool isComparisonOperator() const;
+
+    // expression ::= term {( "-" | "+" ) term}
+    void expression();
+
+    // term ::= unary {( "/" | "*" ) unary}
+    void term();
+
+    // unary ::= ["+" | "-"] primary
+    void unary();
+
+    // primary ::= number | ident
+    void primary();
 };
 
 #endif //PARSER_H
