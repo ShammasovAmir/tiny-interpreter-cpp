@@ -48,7 +48,6 @@ char Lexer::peek()
     return this->source[this->curPos + 1];
 }
 
-//TODO: ERROR PROLLY HERE
 void Lexer::skipWhitespace()
 {
     while (this->curChar == ' ' || this->curChar == '\t' || this->curChar == '\r')

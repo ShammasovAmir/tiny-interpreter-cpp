@@ -47,7 +47,7 @@ void Parser::program()
 
     for (auto label = this->labelsGotoed.begin(); label != this->labelsGotoed.end(); label++)
     {
-        if (this->labelsDeclared.contains(*label))
+        if (!this->labelsDeclared.contains(*label))
         {
             const std::string& expectsString{ *label };
             throw std::runtime_error("Attempting to GOTO to undeclared label: " + expectsString);
@@ -130,6 +130,10 @@ void Parser::statement()
     {
         std::cout << "STATEMENT-LET" << '\n';
         this->nextToken();
+        if (!this->symbols.contains(std::get<std::string>(this->currentToken.text)))
+        {
+            this->symbols.insert(std::get<std::string>(this->currentToken.text));
+        }
         this->match(TokenType::IDENT);
         this->match(TokenType::EQ);
         this->expression();
@@ -139,12 +143,16 @@ void Parser::statement()
     {
         std::cout << "STATEMENT-INPUT" << '\n';
         this->nextToken();
+        if (!this->symbols.contains(std::get<std::string>(this->currentToken.text)))
+        {
+            this->symbols.insert(std::get<std::string>(this->currentToken.text));
+        }
         this->match(TokenType::IDENT);
     }
     // This is not a valid statement. Error!
     else throw std::runtime_error("Invalid statement at " +
         std::get<std::string>(this->currentToken.text) + " (" +
-        Token::getTokenKeyFromValue(this->currentToken.kind) + ")");
+        Token::getTokenKeyFromValue(this->currentToken.kind) + ")\n");
 
     this->newline();
 }
@@ -233,8 +241,17 @@ void Parser::primary()
         Token::getTokenKeyFromValue(this->currentToken.kind) <<
         ": " << std::get<std::string>(this->currentToken.text) << ")" << '\n';
 
-    if (this->checkToken(TokenType::NUMBER) || this->checkToken(TokenType::IDENT))
+    if (this->checkToken(TokenType::NUMBER))
         this->nextToken();
+    else if (this->checkToken(TokenType::IDENT))
+    {
+        if (!this->symbols.contains(std::get<std::string>(this->currentToken.text)))
+        {
+            throw std::runtime_error("Referencing variable before assignment: " +
+                std::get<std::string>(this->currentToken.text));
+        }
+        this->nextToken();
+    }
     else throw std::runtime_error(&"Unexpected token at " [
         std::get<char>(this->currentToken.text)]);
 }
