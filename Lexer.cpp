@@ -140,10 +140,12 @@ Token Lexer::getToken()
             }
             throw std::runtime_error("Expected !=, got !" + std::to_string(this->peek()));
         }
-    case '\n': this->nextChar();
-return Token(this->curChar, TokenType::NEWLINE);
-    case '\0': this->nextChar();
-return Token(this->curChar, TokenType::EOF_);
+    case '\n':
+        this->nextChar();
+        return Token(this->curChar, TokenType::NEWLINE);
+    case '\0':
+        this->nextChar();
+        return Token(this->curChar, TokenType::EOF_);
     case '\"':
         {
             // Get the chars between quotations

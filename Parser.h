@@ -7,11 +7,13 @@
 
 #include "common.h"
 #include "Lexer.h"
+#include "Emitter.h"
 
 struct Parser
 {
     // properties
     Lexer&                lexer;
+    Emitter&              emitter;
     Token                 currentToken;
     Token                 peekToken;
     std::set<std::string> symbols; // Variables declared so far.
@@ -19,8 +21,9 @@ struct Parser
     std::set<std::string> labelsGotoed; // Labels goto'ed so far.
 
     // constructor
-    explicit Parser(Lexer& lexerInstance)
+    explicit Parser(Lexer& lexerInstance, Emitter& emitterInstance)
         : lexer(lexerInstance),
+        emitter(emitterInstance),
         currentToken("NULL", TokenType::NULL_),
         peekToken("NULL", TokenType::NULL_)
     {

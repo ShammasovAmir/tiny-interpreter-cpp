@@ -33,6 +33,9 @@ void Parser::program()
 {
     std::cout << "PROGRAM" << '\n';
 
+    this->emitter.headerLine("#include <stdio.h>");
+    this->emitter.headerLine("int main(void){");
+
     // Since some newlines are required in our grammar, need to skip the excess.
     while (this->checkToken(TokenType::NEWLINE))
     {
@@ -44,6 +47,9 @@ void Parser::program()
     {
         this->statement();
     }
+
+    this->emitter.emitLine("return 0;");
+    this->emitter.emitLine("}");
 
     for (auto label = this->labelsGotoed.begin(); label != this->labelsGotoed.end(); label++)
     {
@@ -67,20 +73,31 @@ void Parser::statement()
 
         if (this->checkToken(TokenType::STRING))
         {
-            // Simple string
+            // Simple string, so print it
+            this->emitter.emitLine("printf(\"" +
+                                   std::get<std::string>(this->currentToken.text) + "\\n\");");
             this->nextToken();
         }
-        else this->expression();
+        else
+        {
+            // Expect an expression and print the result as a float.
+            this->emitter.emit(std::string("printf(\"%") +
+                               std::string(".2f\\n\", (float)("));
+            this->expression();
+            this->emitter.emitLine("));");
+        }
     }
     // "IF" comparison "THEN" {statement} "ENDIF"
     else if (this->checkToken(TokenType::IF))
     {
         std::cout << "STATEMENT-IF" << '\n';
         this->nextToken();
+        this->emitter.emit("if(");
         this->comparison();
 
         this->match(TokenType::THEN);
         this->newline();
+        this->emitter.emitLine("){");
 
         // Zero or more statements in the body.
         while (!this->checkToken(TokenType::ENDIF))
@@ -88,16 +105,19 @@ void Parser::statement()
             this->statement();
         }
         this->match(TokenType::ENDIF);
+        this->emitter.emitLine("}");
     }
     // "WHILE" comparison "REPEAT" {statement} "ENDWHILE"
     else if (this->checkToken(TokenType::WHILE))
     {
         std::cout << "STATEMENT-WHILE" << '\n';
         this->nextToken();
+        this->emitter.emit("while(");
         this->comparison();
 
         this->match(TokenType::REPEAT);
         this->newline();
+        this->emitter.emitLine("){");
 
         // Zero or more statements in the loop body.
         while (!this->checkToken(TokenType::ENDWHILE))
@@ -105,24 +125,28 @@ void Parser::statement()
             this->statement();
         }
         this->match(TokenType::ENDWHILE);
+        this->emitter.emitLine("}");
     }
-    // "LABEL" ident
+        // "LABEL" ident
     else if (this->checkToken(TokenType::LABEL))
     {
         std::cout << "STATEMENT-LABEL" << '\n';
         this->nextToken();
         if (this->labelsDeclared.contains(std::get<std::string>(this->currentToken.text)))
             throw std::runtime_error("Label already exists: " +
-                 std::get<std::string>(this->currentToken.text));
+                                     std::get<std::string>(this->currentToken.text));
         this->labelsDeclared.insert(std::get<std::string>(this->currentToken.text));
+
+        this->emitter.emitLine(std::get<std::string>(this->currentToken.text) + ":");
         this->match(TokenType::IDENT);
     }
-    // "GOTO" ident
+        // "GOTO" ident
     else if (this->checkToken(TokenType::GOTO))
     {
         std::cout << "STATEMENT-GOTO" << '\n';
         this->nextToken();
         this->labelsGotoed.insert(std::get<std::string>(this->currentToken.text));
+        this->emitter.emitLine("goto " + std::get<std::string>(this->currentToken.text) + ";");
         this->match(TokenType::IDENT);
     }
     // "LET" ident "=" expression
@@ -133,12 +157,17 @@ void Parser::statement()
         if (!this->symbols.contains(std::get<std::string>(this->currentToken.text)))
         {
             this->symbols.insert(std::get<std::string>(this->currentToken.text));
+            this->emitter.headerLine("float " +
+                                     std::get<std::string>(this->currentToken.text) + ";");
         }
+        this->emitter.emit(std::get<std::string>(this->currentToken.text) + " = ");
         this->match(TokenType::IDENT);
         this->match(TokenType::EQ);
+
         this->expression();
+        this->emitter.emitLine(";");
     }
-    // "INPUT" ident
+        // "INPUT" ident
     else if (this->checkToken(TokenType::INPUT))
     {
         std::cout << "STATEMENT-INPUT" << '\n';
@@ -146,7 +175,17 @@ void Parser::statement()
         if (!this->symbols.contains(std::get<std::string>(this->currentToken.text)))
         {
             this->symbols.insert(std::get<std::string>(this->currentToken.text));
+            this->emitter.headerLine("float " +
+                std::get<std::string>(this->currentToken.text) + ";");
         }
+
+        // Emit scanf but also validate the input. If invalid, set the variable to 0 and clear the input.
+        this->emitter.emitLine("if(0 == scanf(\"%" + std::string("f\", &") +
+            std::get<std::string>(this->currentToken.text) + ")) {");
+        this->emitter.emitLine(std::get<std::string>(this->currentToken.text) + " = 0;");
+        this->emitter.emit("scanf(\"%");
+        this->emitter.emitLine("*s\");");
+        this->emitter.emitLine("}");
         this->match(TokenType::IDENT);
     }
     // This is not a valid statement. Error!

@@ -1,4 +1,5 @@
 #include "Lexer.h"
+#include "Emitter.h"
 #include "Parser.h"
 
 int main()
@@ -28,9 +29,11 @@ int main()
     try
     {
         Lexer lexer(source);
-        Parser parser(lexer);
+        Emitter emitter("out.c");
+        Parser parser(lexer, emitter);
 
         parser.program();
+        emitter.writeFile();
     }
     catch (const std::runtime_error& e)
     {

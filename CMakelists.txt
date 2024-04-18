@@ -10,4 +10,6 @@ add_executable("TinyInterpreterCpp"
     "Lexer.cpp"
     "Parser.h"
     "Parser.cpp"
+    "Emitter.cpp"
+    "Emitter.h"
 )
