@@ -13,12 +13,11 @@ std::string Token::getTokenKeyFromValue(const TokenType& value)
     return {};
 }
 
-TokenType Token::checkIfKeyword(
-    const std::variant<char, std::string>& tokenText)
+TokenType Token::checkIfKeyword(const std::string& tokenText)
 {
     for (auto& [name, tokenType] : mapTokenType)
     {
-        if (name == std::get<std::string>(tokenText)
+        if (name == tokenText
             && Lexer::getTokenValue(tokenType) >= 100
             && Lexer::getTokenValue(tokenType) < 200)
             return tokenType;
@@ -79,20 +78,36 @@ Token Lexer::getToken()
     this->skipWhitespace();
     this->skipComment();
 
+    std::string plus        = "+";
+    std::string minus       = "-";
+    std::string asterisk    = "*";
+    std::string slash       = "/";
+    std::string eq          = "=";
+    std::string greaterThan = ">";
+    std::string lessThan    = "<";
+
     switch (this->curChar)
     {
     case '+':
+    {
         this->nextChar();
-        return Token(this->curChar, TokenType::PLUS);
+        return Token(plus, TokenType::PLUS);
+    }
     case '-':
+    {
         this->nextChar();
-        return Token(this->curChar, TokenType::MINUS);
+        return Token(minus, TokenType::MINUS);
+    }
     case '*':
+    {
         this->nextChar();
-        return Token(this->curChar, TokenType::ASTERISK);
+        return Token(asterisk, TokenType::ASTERISK);
+    }
     case '/':
+    {
         this->nextChar();
-        return Token(this->curChar, TokenType::SLASH);
+        return Token(slash, TokenType::SLASH);
+    }
     case '=':
         {
             if (this->peek() == '=')
@@ -103,7 +118,7 @@ Token Lexer::getToken()
                 return Token(std::to_string(lastChar + this->curChar), TokenType::EQEQ);
             }
             this->nextChar();
-            return Token(this->curChar, TokenType::EQ);
+            return Token(eq, TokenType::EQ);
         }
     case '>':
         {
@@ -115,7 +130,7 @@ Token Lexer::getToken()
                 return Token(std::to_string(lastChar + this->curChar), TokenType::GTEQ);
             }
             this->nextChar();
-            return Token(this->curChar, TokenType::GT);
+            return Token(greaterThan, TokenType::GT);
         }
     case '<':
         {
@@ -127,7 +142,7 @@ Token Lexer::getToken()
                 return Token(std::to_string(lastChar + this->curChar), TokenType::LTEQ);
             }
             this->nextChar();
-            return Token(this->curChar, TokenType::LT);
+            return Token(lessThan, TokenType::LT);
         }
     case '!':
         {
@@ -142,10 +157,10 @@ Token Lexer::getToken()
         }
     case '\n':
         this->nextChar();
-        return Token(this->curChar, TokenType::NEWLINE);
+        return Token(std::string{'\n'}, TokenType::NEWLINE);
     case '\0':
         this->nextChar();
-        return Token(this->curChar, TokenType::EOF_);
+        return Token(std::string{'\0'}, TokenType::EOF_);
     case '\"':
         {
             // Get the chars between quotations

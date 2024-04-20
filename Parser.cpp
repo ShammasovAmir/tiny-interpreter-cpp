@@ -74,8 +74,7 @@ void Parser::statement()
         if (this->checkToken(TokenType::STRING))
         {
             // Simple string, so print it
-            this->emitter.emitLine("printf(\"" +
-                                   std::get<std::string>(this->currentToken.text) + "\\n\");");
+            this->emitter.emitLine("printf(\"" + this->currentToken.text + "\\n\");");
             this->nextToken();
         }
         else
@@ -132,12 +131,11 @@ void Parser::statement()
     {
         std::cout << "STATEMENT-LABEL" << '\n';
         this->nextToken();
-        if (this->labelsDeclared.contains(std::get<std::string>(this->currentToken.text)))
-            throw std::runtime_error("Label already exists: " +
-                                     std::get<std::string>(this->currentToken.text));
-        this->labelsDeclared.insert(std::get<std::string>(this->currentToken.text));
+        if (this->labelsDeclared.contains(this->currentToken.text))
+            throw std::runtime_error("Label already exists: " + this->currentToken.text);
+        this->labelsDeclared.insert(this->currentToken.text);
 
-        this->emitter.emitLine(std::get<std::string>(this->currentToken.text) + ":");
+        this->emitter.emitLine(this->currentToken.text + ":");
         this->match(TokenType::IDENT);
     }
         // "GOTO" ident
@@ -145,8 +143,8 @@ void Parser::statement()
     {
         std::cout << "STATEMENT-GOTO" << '\n';
         this->nextToken();
-        this->labelsGotoed.insert(std::get<std::string>(this->currentToken.text));
-        this->emitter.emitLine("goto " + std::get<std::string>(this->currentToken.text) + ";");
+        this->labelsGotoed.insert(this->currentToken.text);
+        this->emitter.emitLine("goto " + this->currentToken.text + ";");
         this->match(TokenType::IDENT);
     }
     // "LET" ident "=" expression
@@ -154,13 +152,13 @@ void Parser::statement()
     {
         std::cout << "STATEMENT-LET" << '\n';
         this->nextToken();
-        if (!this->symbols.contains(std::get<std::string>(this->currentToken.text)))
+        if (!this->symbols.contains(this->currentToken.text))
         {
-            this->symbols.insert(std::get<std::string>(this->currentToken.text));
+            this->symbols.insert(this->currentToken.text);
             this->emitter.headerLine("float " +
-                                     std::get<std::string>(this->currentToken.text) + ";");
+            this->currentToken.text + ";");
         }
-        this->emitter.emit(std::get<std::string>(this->currentToken.text) + " = ");
+        this->emitter.emit(this->currentToken.text + " = ");
         this->match(TokenType::IDENT);
         this->match(TokenType::EQ);
 
@@ -172,17 +170,17 @@ void Parser::statement()
     {
         std::cout << "STATEMENT-INPUT" << '\n';
         this->nextToken();
-        if (!this->symbols.contains(std::get<std::string>(this->currentToken.text)))
+        if (!this->symbols.contains(this->currentToken.text))
         {
-            this->symbols.insert(std::get<std::string>(this->currentToken.text));
+            this->symbols.insert(this->currentToken.text);
             this->emitter.headerLine("float " +
-                std::get<std::string>(this->currentToken.text) + ";");
+                this->currentToken.text + ";");
         }
 
         // Emit scanf but also validate the input. If invalid, set the variable to 0 and clear the input.
         this->emitter.emitLine("if(0 == scanf(\"%" + std::string("f\", &") +
-            std::get<std::string>(this->currentToken.text) + ")) {");
-        this->emitter.emitLine(std::get<std::string>(this->currentToken.text) + " = 0;");
+            this->currentToken.text + ")) {");
+        this->emitter.emitLine(this->currentToken.text + " = 0;");
         this->emitter.emit("scanf(\"%");
         this->emitter.emitLine("*s\");");
         this->emitter.emitLine("}");
@@ -190,7 +188,7 @@ void Parser::statement()
     }
     // This is not a valid statement. Error!
     else throw std::runtime_error("Invalid statement at " +
-        std::get<std::string>(this->currentToken.text) + " (" +
+        this->currentToken.text + " (" +
         Token::getTokenKeyFromValue(this->currentToken.kind) + ")\n");
 
     this->newline();
@@ -217,6 +215,7 @@ void Parser::comparison()
     // Must be at least one comparison operator and another expression.
     if (this->isComparisonOperator())
     {
+        this->emitter.emit(this->currentToken.text);
         this->nextToken();
         this->expression();
     }
@@ -226,6 +225,7 @@ void Parser::comparison()
     // Can have 0 or more comparison operator and expressions.
     while (this->isComparisonOperator())
     {
+        this->emitter.emit(this->currentToken.text);
         this->nextToken();
         this->expression();
     }
@@ -246,6 +246,7 @@ void Parser::expression()
     // Can have 0 or more +/- and expressions.
     while (this->checkToken(TokenType::PLUS) || this->checkToken(TokenType::MINUS))
     {
+        this->emitter.emit(this->currentToken.text);
         this->nextToken();
         this->term();
     }
@@ -259,6 +260,7 @@ void Parser::term()
     // Can have 0 or more *// and expressions.
     while (this->checkToken(TokenType::ASTERISK) || this->checkToken(TokenType::SLASH))
     {
+        this->emitter.emit(this->currentToken.text);
         this->nextToken();
         this->unary();
     }
@@ -270,7 +272,10 @@ void Parser::unary()
 
     // Optional unary +/-
     if (this->checkToken(TokenType::PLUS) || this->checkToken(TokenType::MINUS))
+    {
+        this->emitter.emit(this->currentToken.text);
         this->nextToken();
+    }
     this->primary();
 }
 
@@ -278,19 +283,27 @@ void Parser::primary()
 {
     std::cout << "PRIMARY (" <<
         Token::getTokenKeyFromValue(this->currentToken.kind) <<
-        ": " << std::get<std::string>(this->currentToken.text) << ")" << '\n';
+        ": " << this->currentToken.text << ")" << '\n';
 
     if (this->checkToken(TokenType::NUMBER))
-        this->nextToken();
-    else if (this->checkToken(TokenType::IDENT))
     {
-        if (!this->symbols.contains(std::get<std::string>(this->currentToken.text)))
-        {
-            throw std::runtime_error("Referencing variable before assignment: " +
-                std::get<std::string>(this->currentToken.text));
-        }
+        this->emitter.emit(this->currentToken.text);
         this->nextToken();
     }
-    else throw std::runtime_error(&"Unexpected token at " [
-        std::get<char>(this->currentToken.text)]);
+    else if (this->checkToken(TokenType::IDENT))
+    {
+        if (!this->symbols.contains(this->currentToken.text))
+        {
+            throw std::runtime_error("Referencing variable before assignment: " +
+                this->currentToken.text);
+        }
+
+        this->emitter.emit(this->currentToken.text);
+        this->nextToken();
+    }
+    else
+    {
+        std::string err = "Unexpected token at " + this->currentToken.text;
+        throw std::runtime_error(err);
+    }
 }

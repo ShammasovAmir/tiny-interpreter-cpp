@@ -80,11 +80,11 @@ static std::map<std::string ,TokenType> mapTokenType = {
 struct Token
 {
     // properties
-    std::variant<char, std::string> text;
-    TokenType                       kind;
+    std::string text;
+    TokenType   kind;
 
     // constructor
-    Token(const std::variant<char, std::string>& tokenText, const TokenType tokenKind)
+    Token(const std::string& tokenText, const TokenType tokenKind)
     {
         this->text = tokenText;
         this->kind = tokenKind;
@@ -92,7 +92,7 @@ struct Token
 
     static std::string getTokenKeyFromValue(const TokenType& value);
 
-    static TokenType checkIfKeyword(const std::variant<char, std::string>& tokenText);
+    static TokenType checkIfKeyword(const std::string& tokenText);
 };
 #pragma endregion
 
